@@ -49,10 +49,10 @@ getColnames <- reactive({
 #get p-value column
 getPVCol <- reactive({
 	input$pvCol
-	validate(
-	need(input$pvCol != "", "Please select the column for p-value")
+	#validate(
+	#need(input$pvCol != "", "Please select the column for p-value")
 	#need(class(res[input$pvCol])== numeric, "Please select the column for p-value")
-	)
+	#)
 	val <- isolate(input$pvCol)
 	return (val)
 
@@ -60,10 +60,6 @@ getPVCol <- reactive({
 #log Fold Change column
 getFCCol <- reactive({
 	input$fcCol
-	validate(
-	need(input$fcCol != "", "Please select the column for fold change")
-	#need(class(res[input$fcCol])== numeric, "Please select the column for fold change")
-	)
 	val <- isolate(input$fcCol)
 	return (val)
 })
@@ -74,19 +70,60 @@ geneId <- reactive({
 	val <- isolate(input$geneIdCol)
 	return (val)
 })
-#get the gene ID col slider
+#get the gene ID col 
 geneName <- reactive({
 	input$geneNameCol
 	val <- isolate(input$geneNameCol)
 	return (val)
 })
 
-#get the gene Description col slider
+#get the gene Description col 
 geneDes <- reactive({
 	input$geneDesCol
 	val <- isolate(input$geneDesCol)
 	return (val)
 })
+
+#get fcmax for slider
+getFCmax <- reactive ({
+  input$fcCol
+  if(isolate(input$fcCol) == "")
+  {
+    return(5)
+  }else{
+    x <- which(colnames(res) == input$fcCol)
+    
+    if (is.numeric(res[,x]))
+    {
+      vals <- abs(res[,x])
+      val <- ceiling(max(vals))
+      return(val)      
+    }else{
+      return(5)
+    }
+  }
+})
+
+#get pvmax for slider
+getPVmax <- reactive ({
+  input$pvCol
+  if(isolate(input$pvCol) == "")
+  {
+    return(5)
+  }else{
+    x <- which(colnames(res) == input$pvCol)
+    
+    if (is.numeric(res[,x]))
+    {
+      val <- ceiling(max(-log10(res[,x])))
+      return(val)      
+    }else{
+      return(5)
+    }
+  }
+})
+
+
 #get the log p-value slider
 getPV <- reactive({
 	input$pvselection
@@ -113,11 +150,14 @@ getFV <- reactive({
   })
   ##set the p-Value
     output$pvselection <- renderUI({
-    sliderInput("pvselection", label = "Select the log p-value ", min=min(res[getPVCol()]), max=max(res[getPVCol()]), value = 0)
+    input$pvCol
+    sliderInput("pvselection", label = "Select the log p-value ", min=0, max=getPVmax(), value = 0)
   })
   ##set the fold change
-     output$fcselection <- renderUI({
-    sliderInput("fcselection", label = "Select the log Fold Change Column", min=min(res[getFCCol()]), max=max(res[getFCCol()]), value = 0)
+    output$fcselection <- renderUI({
+    input$fcCol
+    sliderInput("fcselection", label = "Select the log Fold Change Column", min=0, max=getFCmax(), value = 0)
+
   })
  
 ## gene id col
@@ -136,18 +176,20 @@ getFV <- reactive({
   })
   
   
+  observeEvent(input$refreshPlot, {
+    
   
   output$volcano <- renderPlot(
     {
-	  input$refreshPlot
+	  #input$refreshPlot
 	
       pvselection <- as.numeric(input$pvselection)
       fcselection <- as.numeric(input$fcselection)
-	  LogFC <- res[getFCCol()]
-	  negLogPV <- -log10(res[getPVCol()])
-	  GeneId <- (res[geneId()])
-	  GeneName <- (res[geneName()])
-	  GeneDes <- (res[geneDes()])
+  	  LogFC <- res[getFCCol()]
+  	  negLogPV <- -log10(res[getPVCol()])
+  	  GeneId <- (res[geneId()])
+  	  GeneName <- (res[geneName()])
+  	  GeneDes <- (res[geneDes()])
 
       #generate extra cloumn
       DoublePostitionCol <- as.factor(((negLogPV >= pvselection & (abs(LogFC) >= fcselection))))
@@ -158,19 +200,19 @@ getFV <- reactive({
       ))
       print(df)
       
-      plot(df$LogFC, df$negLogPV, col=c("gray", "blue")[df$DoublePostitionCol], xlab="Log10 Fold Change", ylab="Negative Log10 p-value", main="Foldchange vs p-Value")
+      #plot(df$LogFC, df$negLogPV, col=c("gray", "blue")[df$DoublePostitionCol], xlab="Log10 Fold Change", ylab="Negative Log10 p-value", main="Foldchange vs p-Value")
 
-      abline(h=pvselection, col="black", lty=2, lwd=1)
+      #abline(h=pvselection, col="black", lty=2, lwd=1)
 
 
-      abline(v=c(-fcselection,fcselection), col=c("red", "red"), lty=c(2,2), lwd=c(1,1))
+      #abline(v=c(-fcselection,fcselection), col=c("red", "red"), lty=c(2,2), lwd=c(1,1))
       
     })
   #get the value for table
-  output$table = renderTable({
-	  input$refreshPlot
-      pvselection <- as.numeric(input$pvselection)
-      fcselection <- as.numeric(input$fcselection)
+  output$table = renderDataTable({
+	  #input$refreshPlot
+    pvselection <- as.numeric(input$pvselection)
+    fcselection <- as.numeric(input$fcselection)
 	  LogFC <- res[getFCCol()]
 	  negLogPV <- -log10(res[getPVCol()])
 	  GeneId <- (res[geneId()])
@@ -188,4 +230,6 @@ getFV <- reactive({
       df[df$DoublePostitionCol=="TRUE",c(1,2,3,4,5)]
     
   })
-}
+  })
+  }
+
