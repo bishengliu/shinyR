@@ -7,46 +7,86 @@
 
 library(shiny)
 
-shinyUI(fluidPage(
-    
-    # Application title
-      headerPanel(h1("Volcano Plot", style = "color: #4d3a7d;")),
-      #titlePanel("Volcano plot"),
-      fluidRow(
-          column(8, 
-       
-          # Show a plot and a table
-            mainPanel(
-              plotOutput("volcano"),
-              tabPanel('df',
-                       dataTableOutput("table")))
-          ),
-          column(4, 
-                 
-                 selectInput(
-                   inputId="pvCol", 
-                   label = "Select p-value Column", 
-                   choices = c(),
-                   multiple = FALSE),
-                 selectInput(
-                   inputId="fcCol", 
-                   label = "Select Fold Change Column",
-                   choices = c(),
-                   multiple = FALSE),
-                tags$hr(), 
-              selectInput(
-                inputId="pvselection", 
-                label = "Select p-Value", 
-                choices = c("p<0.05" = 1.30103, "p<0.01" = 2), 
-                selected =  1.3013, 
-                multiple = FALSE),
-              selectInput(
-                inputId="fcselection", 
-                label = "Select fold change", 
-                choices = c("2" = 2, "4" = 4), 
-                selected =  2, 
-                multiple = FALSE)
-        )
-    )
-  )
+shinyUI(
+bootstrapPage(
+  
+	navbarPage(title="", windowTitle ="VolcanoPlot",header="",
+            tabPanel("Volcano Plot", 
+               
+				fluidRow(
+					column(2,
+						wellPanel(
+									HTML("<h4>Upload File</h4>"),
+									HTML("<hr>"),
+									## upload file
+									fileInput('infile', '',
+											  accept = c('.tsv')
+									),
+									HTML("<div>
+										<h4>Help on Input File! </h4>
+										<ul>
+											<li>Your input file must be Tab separated</li>
+											<li>Your input file must have a header</li>
+											<li>Make sure your input file data items are NOT wrapped with qoutes</li>
+										</ul>
+									</div>")
+						)
+					),
+					column(8,
+					    fluidRow(
+                          HTML("<div class='alert alert-warning alert-dismissible' role='alert'>
+                              <button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
+                                <p align='center'><strong>Notice!</strong> some text here</p>
+                              </div>")
+						),
+						fluidRow(
+                                 shiny::actionButton("refreshPlot",label="Refresh",class='btn btn-primary')
+                        ),
+						fluidRow(
+                            plotOutput("volcano")
+                        ),
+                      fluidRow(
+							dataTableOutput("table")	
+                        )
+					),
+					column(2,
+						wellPanel(
+							
+                        
+                        uiOutput("pvCol"),
+						HTML("<br />"),
+						
+                        uiOutput("pvselection"),
+						HTML("<hr />"),
+						
+                        uiOutput("fcCol"),
+						HTML("<br />"),
+						HTML("<h4>Set log Fold Change </h4>"),
+                        uiOutput("fcselection"),
+						HTML("<hr />"),
+						tags$p("Addition columns for table output:"),
+						HTML("<br />"),
+						
+                        uiOutput("geneIdCol"),
+						HTML("<br />"),
+						
+                        uiOutput("geneNameCol"),
+						HTML("<br />"),
+						
+                        uiOutput("geneDesCol")
+						)
+					
+					)
+				)
+            ),
+            tabPanel("Documentation",
+				fluidRow(
+					column(3),
+					    column(6, HTML("<p>Documentation</p>")),
+					column(3)
+				)
+			)
+             
+	)
+)
 )
