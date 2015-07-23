@@ -5,6 +5,7 @@
 # http://shiny.rstudio.com
 #
 library("shiny")
+library("rCharts")
 # By default, the file size limit is 5MB. It can be changed by
 # setting this option. Here we'll raise limit to 36MB.
 options(shiny.maxRequestSize = 36*1024^2)
@@ -111,7 +112,7 @@ geneDes <- reactive({
 #get fcmax for slider
 getFCmax <- reactive ({
   input$fcCol
-  if(isolate(input$fcCol) == "")
+  if(isolate(length(input$fcCol)) == 0)
   {
     return(5)
   }else{
@@ -131,7 +132,7 @@ getFCmax <- reactive ({
 #get pvmax for slider
 getPVmax <- reactive ({
   input$pvCol
-  if(isolate(input$pvCol) == "")
+  if(isolate(length(input$pvCol)) == 0)
   {
     return(5)
   }else{
@@ -219,9 +220,7 @@ getFV <- reactive({
       #genrate datafram
       df <- cbind(cbind(  data.frame(cbind(LogFC,negLogPV)), 
                           DoublePostitionCol
-      ))
-      print(df)
-      
+      ))  
       plot(df[[1]], df[[2]], col=c("gray", "blue")[df[[3]]], xlab="Log10 Fold Change", ylab="Negative Log10 p-value", main="Foldchange vs p-Value")
 
       abline(h=pvselection, col="black", lty=2, lwd=1)
@@ -230,8 +229,63 @@ getFV <- reactive({
       abline(v=c(-fcselection,fcselection), col=c("red", "red"), lty=c(2,2), lwd=c(1,1))
       
     })
-  #get the value for table
-  output$table = renderDataTable({
+	####################################################################################
+	#this part gives a problem
+	#for reactive chart
+		output$rchart <- renderChart({
+	
+	#input$refreshPlot
+      pvselection <- as.numeric(input$pvselection)
+      fcselection <- as.numeric(input$fcselection)
+	  LogFC <- res[getFCCol()]
+	  negLogPV <- -log10(res[getPVCol()])
+	  GeneId <- (res[geneId()])
+	  if(geneName() !=0){
+	  GeneName <- (res[geneName()])}
+	  if(geneDes() !=0){
+	  GeneDes <- (res[geneDes()])
+	  }
+	  
+	  #generate extra cloumn
+      DoublePostitionCol <- as.factor(((negLogPV >= pvselection & (abs(LogFC) >= fcselection))))
+      
+      #genrate datafram
+	  if(geneName() ==0){
+		if(geneDes() ==0){
+			df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV)), 
+                          DoublePostitionCol))
+			colnames(df) <- c("GeneId", "LogFC", "NegLogPV", "DoublePostitionCol")
+		}
+		else{
+			df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneDes)), 
+                          DoublePostitionCol))
+			colnames(df) <- c("GeneId", "LogFC", "NegLogPV", "GeneDes","DoublePostitionCol")
+		}
+	  }else{
+			if(geneDes() ==0){
+				df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName)), 
+							  DoublePostitionCol))
+				colnames(df) <- c("GeneId", "LogFC", "NegLogPV", "GeneName","DoublePostitionCol")
+			}
+			else{
+				df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName, GeneDes)), 
+							  DoublePostitionCol))
+				colnames(df) <- c("GeneId", "LogFC", "NegLogPV", "GeneName", "GeneDes","DoublePostitionCol")
+			}
+	  }
+	  #print (df)
+		df1 <- subset(df, DoublePostitionCol == "TRUE")
+		#rPlot(LogFC ~ negLogPV, data=df1, color='GeneId', type='point')
+		p1 <- rPlot(LogFC ~ NegLogPV, data=df1, type='point')
+		#p1$save('p1.html', cdn=TRUE)
+		return(p1)
+
+	})
+	
+	
+	##############################################################################################
+  #for table
+  output$table <- renderDataTable({
 	  #input$refreshPlot
       pvselection <- as.numeric(input$pvselection)
       fcselection <- as.numeric(input$fcselection)
@@ -253,21 +307,24 @@ getFV <- reactive({
 		if(geneDes() ==0){
 			df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV)), 
                           DoublePostitionCol))
+			colnames(df) <- c("GeneId", "LogFC", "NegLogPV", "DoublePostitionCol")
 		}
 		else{
 			df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneDes)), 
                           DoublePostitionCol))
+			colnames(df) <- c("GeneId", "LogFC", "NegLogPV", "GeneDes","DoublePostitionCol")
 		}
 	  }else{
 			if(geneDes() ==0){
-			df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName)), 
-                          DoublePostitionCol))
-		}
-		else{
-			df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName, GeneDes)), 
-                          DoublePostitionCol))
-		}
-	  
+				df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName)), 
+							  DoublePostitionCol))
+				colnames(df) <- c("GeneId", "LogFC", "NegLogPV", "GeneName","DoublePostitionCol")
+			}
+			else{
+				df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName, GeneDes)), 
+							  DoublePostitionCol))
+				colnames(df) <- c("GeneId", "LogFC", "NegLogPV", "GeneName", "GeneDes","DoublePostitionCol")
+			}
 	  }
       #df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName, GeneDes)), 
       #                    DoublePostitionCol

@@ -6,6 +6,10 @@
 #
 
 library(shiny)
+library("rCharts")
+#install.packages("devtools")
+library(devtools)
+#install_github('rCharts', 'ramnathv')
 
 shinyUI(
 bootstrapPage(
@@ -45,6 +49,10 @@ bootstrapPage(
 						fluidRow(
 							column(6,
 								plotOutput("volcano")
+							),
+							column(6,
+								showOutput("rchart", "polycharts")
+							#	#plotOutput("rchart")
 							)
                         ),
                       fluidRow(
