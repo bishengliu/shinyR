@@ -41,11 +41,27 @@ getColnames <- reactive({
     }else{
       res <<- read.delim(infl$datapath,sep="\t",header= TRUE)
       ## update variables
-      choices <<- colnames(res)
+      choices <- colnames(res)
       return(choices)
     }
   })
 
+  #add "Exclude from output"
+  getNewColnames <-reactive({
+	infl <- input$infile      
+    if (is.null(infl))
+    {
+      return(c())
+    }else{
+
+      ## update variables
+      choices <- c("Exclude from output", colnames(res))
+      return(choices)
+    }
+  
+  })
+  
+  
 #get p-value column
 getPVCol <- reactive({
 	input$pvCol
@@ -70,18 +86,26 @@ geneId <- reactive({
 	val <- isolate(input$geneIdCol)
 	return (val)
 })
-#get the gene ID col 
+#get the gene name col 
 geneName <- reactive({
 	input$geneNameCol
+	if(input$geneNameCol !="Exclude from output"){
 	val <- isolate(input$geneNameCol)
 	return (val)
+	}else{
+	return(0)
+	}
 })
 
 #get the gene Description col 
 geneDes <- reactive({
 	input$geneDesCol
+	if(input$geneDesCol !="Exclude from output"){
 	val <- isolate(input$geneDesCol)
 	return (val)
+	}else{
+	return(0)
+	}	
 })
 
 #get fcmax for slider
@@ -167,12 +191,12 @@ getFV <- reactive({
   
   ## gene name
   output$geneNameCol <- renderUI({
-    selectInput("geneNameCol", label = "Select Gene Name Column", choices = getColnames())
+    selectInput("geneNameCol", label = "Select Gene Name Column", choices = getNewColnames())
   })
   
   ## gene id col
   output$geneDesCol <- renderUI({
-    selectInput("geneDesCol", label = "Select Gene Description Column", choices = getColnames())
+    selectInput("geneDesCol", label = "Select Gene Description Column", choices = getNewColnames())
   })
   
   
@@ -187,47 +211,69 @@ getFV <- reactive({
       fcselection <- as.numeric(input$fcselection)
   	  LogFC <- res[getFCCol()]
   	  negLogPV <- -log10(res[getPVCol()])
-  	  GeneId <- (res[geneId()])
-  	  GeneName <- (res[geneName()])
-  	  GeneDes <- (res[geneDes()])
+
 
       #generate extra cloumn
       DoublePostitionCol <- as.factor(((negLogPV >= pvselection & (abs(LogFC) >= fcselection))))
       
       #genrate datafram
-      df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName, GeneDes)), 
+      df <- cbind(cbind(  data.frame(cbind(LogFC,negLogPV)), 
                           DoublePostitionCol
       ))
       print(df)
       
-      #plot(df$LogFC, df$negLogPV, col=c("gray", "blue")[df$DoublePostitionCol], xlab="Log10 Fold Change", ylab="Negative Log10 p-value", main="Foldchange vs p-Value")
+      plot(df[[1]], df[[2]], col=c("gray", "blue")[df[[3]]], xlab="Log10 Fold Change", ylab="Negative Log10 p-value", main="Foldchange vs p-Value")
 
-      #abline(h=pvselection, col="black", lty=2, lwd=1)
+      abline(h=pvselection, col="black", lty=2, lwd=1)
 
 
-      #abline(v=c(-fcselection,fcselection), col=c("red", "red"), lty=c(2,2), lwd=c(1,1))
+      abline(v=c(-fcselection,fcselection), col=c("red", "red"), lty=c(2,2), lwd=c(1,1))
       
     })
   #get the value for table
   output$table = renderDataTable({
 	  #input$refreshPlot
-    pvselection <- as.numeric(input$pvselection)
-    fcselection <- as.numeric(input$fcselection)
+      pvselection <- as.numeric(input$pvselection)
+      fcselection <- as.numeric(input$fcselection)
 	  LogFC <- res[getFCCol()]
 	  negLogPV <- -log10(res[getPVCol()])
 	  GeneId <- (res[geneId()])
-	  GeneName <- (res[geneName()])
+	  if(geneName() !=0){
+	  GeneName <- (res[geneName()])}
+	  if(geneDes() !=0){
 	  GeneDes <- (res[geneDes()])
+	  }
+	  
 
       #generate extra cloumn
       DoublePostitionCol <- as.factor(((negLogPV >= pvselection & (abs(LogFC) >= fcselection))))
       
       #genrate datafram
-      df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName, GeneDes)), 
-                          DoublePostitionCol
-      ))
+	  if(geneName() ==0){
+		if(geneDes() ==0){
+			df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV)), 
+                          DoublePostitionCol))
+		}
+		else{
+			df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneDes)), 
+                          DoublePostitionCol))
+		}
+	  }else{
+			if(geneDes() ==0){
+			df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName)), 
+                          DoublePostitionCol))
+		}
+		else{
+			df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName, GeneDes)), 
+                          DoublePostitionCol))
+		}
+	  
+	  }
+      #df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName, GeneDes)), 
+      #                    DoublePostitionCol
+      #))
       #subset(df, df$DoublePostitionCol=="TRUE", select = c(1, 2, 3))
-      df[df$DoublePostitionCol=="TRUE",c(1,2,3,4,5)]
+      df[df$DoublePostitionCol=="TRUE",c(seq(1:(length(df)-1)))]
     
   })
   })

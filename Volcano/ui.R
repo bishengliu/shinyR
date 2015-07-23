@@ -20,7 +20,7 @@ bootstrapPage(
 									HTML("<hr>"),
 									## upload file
 									fileInput('infile', '',
-											  accept = c('.tsv')
+											  accept = c('.tsv', '.txt')
 									),
 									HTML("<div>
 										<h4>Help on Input File! </h4>
@@ -43,7 +43,9 @@ bootstrapPage(
                                  shiny::actionButton("refreshPlot",label="Refresh",class='btn btn-primary')
                         ),
 						fluidRow(
-                            plotOutput("volcano")
+							column(6,
+								plotOutput("volcano")
+							)
                         ),
                       fluidRow(
 							dataTableOutput("table")	
@@ -61,7 +63,6 @@ bootstrapPage(
 						
                         uiOutput("fcCol"),
 						HTML("<br />"),
-						HTML("<h4>Set log Fold Change </h4>"),
                         uiOutput("fcselection"),
 						HTML("<hr />"),
 						tags$p("Addition columns for table output:"),
