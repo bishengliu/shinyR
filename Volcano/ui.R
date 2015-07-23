@@ -47,13 +47,13 @@ bootstrapPage(
                                  shiny::actionButton("refreshPlot",label="Refresh",class='btn btn-primary')
                         ),
 						fluidRow(
-							column(6,
+							column(4,
 								plotOutput("volcano")
 							),
-							column(6,
+							column(4,
 								showOutput("rchart", "polycharts")
-							#	#plotOutput("rchart")
-							)
+							),
+							column(4)
                         ),
                       fluidRow(
 							dataTableOutput("table")	

@@ -221,7 +221,7 @@ getFV <- reactive({
       df <- cbind(cbind(  data.frame(cbind(LogFC,negLogPV)), 
                           DoublePostitionCol
       ))  
-      plot(df[[1]], df[[2]], col=c("gray", "blue")[df[[3]]], xlab="Log10 Fold Change", ylab="Negative Log10 p-value", main="Foldchange vs p-Value")
+      plot(df[[1]], df[[2]], col=c("gray", "#DF6026")[df[[3]]], xlab="Log10 Fold Change", ylab="Negative Log10 p-value", main="Foldchange vs p-Value", pch=19)
 
       abline(h=pvselection, col="black", lty=2, lwd=1)
 
@@ -230,9 +230,9 @@ getFV <- reactive({
       
     })
 	####################################################################################
-	#this part gives a problem
+	#
 	#for reactive chart
-		output$rchart <- renderChart({
+		output$rchart <- renderChart2({
 	
 	#input$refreshPlot
       pvselection <- as.numeric(input$pvselection)
@@ -276,7 +276,11 @@ getFV <- reactive({
 	  #print (df)
 		df1 <- subset(df, DoublePostitionCol == "TRUE")
 		#rPlot(LogFC ~ negLogPV, data=df1, color='GeneId', type='point')
-		p1 <- rPlot(LogFC ~ NegLogPV, data=df1, type='point')
+		p1 <- rPlot(NegLogPV ~ LogFC, data=df1, type='point', color='GeneId')
+		#p1$guides(x = list(min = -(getFCmax() + 1), max = getFCmax() + 1))
+		p1$guides(y = list(title = "NegLogPV", max = getPVmax() + 1))
+		p1$addParams(width = 600, height = 400, dom = 'rchart',
+			title = "Genes of Interest")
 		#p1$save('p1.html', cdn=TRUE)
 		return(p1)
 
