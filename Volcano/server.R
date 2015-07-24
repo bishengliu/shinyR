@@ -5,12 +5,13 @@
 # http://shiny.rstudio.com
 #
 library("shiny")
+library("shinyjs")
 library("rCharts")
 # By default, the file size limit is 5MB. It can be changed by
 # setting this option. Here we'll raise limit to 36MB.
 options(shiny.maxRequestSize = 36*1024^2)
 
-server <- function(input, output)
+server <- function(input, output, session)
 {
 
   ###################################################################################
@@ -162,7 +163,15 @@ getFV <- reactive({
 	return (val)
 })
 
-
+#create the link for table
+createLink <- function(val) {
+  #sprintf('<a href="https://www.google.com/#q=%s" target="_blank" class="btn btn-primary">Info</a>',val)
+  #sprintf('<button onClick="showImg(%s)" class="btn btn-primary">Info</button>',val)
+  #sprintf('<button onClick="showImg(%s)" type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal">Info</button>',val)
+  sprintf('<div class="row"><button type="button" id="%s" class="btn btn-default action-button btn btn-primary shiny-bound-input" data-toggle="modal" data-target="#myModal">Show Plot</button></row>',val)
+  #shiny::actionButton("refreshPlot",label="Refresh",class='btn btn-primary')
+  
+}
  
  ##uiOutPut
  ## p value col selector
@@ -221,7 +230,7 @@ getFV <- reactive({
       df <- cbind(cbind(  data.frame(cbind(LogFC,negLogPV)), 
                           DoublePostitionCol
       ))  
-      plot(df[[1]], df[[2]], col=c("gray", "#DF6026")[df[[3]]], xlab="Log10 Fold Change", ylab="Negative Log10 p-value", main="Foldchange vs p-Value", pch=19)
+      plot(df[[1]], df[[2]], col=c("gray", "#DF6026")[df[[3]]], xlab="Log10 Fold Change", ylab="Negative Log10 p-value", main="Fold change vs p-Value", pch=19)
 
       abline(h=pvselection, col="black", lty=2, lwd=1)
 
@@ -277,9 +286,9 @@ getFV <- reactive({
 		df1 <- subset(df, DoublePostitionCol == "TRUE")
 		#rPlot(LogFC ~ negLogPV, data=df1, color='GeneId', type='point')
 		p1 <- rPlot(NegLogPV ~ LogFC, data=df1, type='point', color='GeneId')
-		#p1$guides(x = list(min = -(getFCmax() + 1), max = getFCmax() + 1))
-		p1$guides(y = list(title = "NegLogPV", max = getPVmax() + 1))
-		p1$addParams(width = 600, height = 400, dom = 'rchart',
+		p1$guides(x = list(title="Log10 Fold Change", min = -getFCmax() - 1, max = getFCmax() + 1))
+		p1$guides(y = list(title = "Fold change vs p-Value", max = getPVmax() + 1))
+		p1$addParams(width = 900, height = 370, dom = 'rchart',
 			title = "Genes of Interest")
 		#p1$save('p1.html', cdn=TRUE)
 		return(p1)
@@ -330,13 +339,34 @@ getFV <- reactive({
 				colnames(df) <- c("GeneId", "LogFC", "NegLogPV", "GeneName", "GeneDes","DoublePostitionCol")
 			}
 	  }
+	  
+	  # add link to the table
+	  df$Action <-  createLink(df$GeneId)
       #df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName, GeneDes)), 
       #                    DoublePostitionCol
       #))
       #subset(df, df$DoublePostitionCol=="TRUE", select = c(1, 2, 3))
-      df[df$DoublePostitionCol=="TRUE",c(seq(1:(length(df)-1)))]
+	  
+      df[df$DoublePostitionCol=="TRUE",c(seq(1:(length(df)-2)), length(df))]
     
+		
+  }, escape = FALSE)
   })
-  })
+  
+   ###try to get boxplot in the table
+
+	output$boxplot <- renderPlot({
+		for (val in res[isolate(input$geneIdCol)]){
+		print(val)	
+				output$boxplot <- renderPlot({
+				hist(c(1,2,3))			
+			})
+		
+		}
+	})
+
+
   }
 
+
+  

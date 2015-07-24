@@ -13,7 +13,7 @@ library(devtools)
 
 shinyUI(
 bootstrapPage(
-  
+	
 	navbarPage(title="", windowTitle ="VolcanoPlot",header="",
             tabPanel("Volcano Plot", 
                
@@ -47,6 +47,7 @@ bootstrapPage(
                                  shiny::actionButton("refreshPlot",label="Refresh",class='btn btn-primary')
                         ),
 						fluidRow(
+							tags$hr(),
 							column(4,
 								plotOutput("volcano")
 							),
@@ -56,8 +57,31 @@ bootstrapPage(
 							column(4)
                         ),
                       fluidRow(
+							tags$hr(),
+							tags$head(HTML("<script type='text/javascript' src='js/plot.js'></script>")),
 							dataTableOutput("table")	
-                        )
+                        ),
+						fluidRow(HTML('<div id="myModal" class="modal fade" role="dialog">
+										  <div class="modal-dialog">
+
+											<!-- Modal content-->
+											<div class="modal-content">
+											  <div class="modal-header">
+												<button type="button" class="close" data-dismiss="modal">&times;</button>
+												<h4 class="modal-title">Modal Header</h4>
+											  </div>
+											  <div class="modal-body">'),
+								plotOutput("boxplot"),
+								HTML('<p>some text</p>
+											  <p id="boxplot"></p>
+											  </div>
+											  <div class="modal-footer">
+												<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+											  </div>
+											</div>
+										  </div>
+										</div>')
+							)
 					),
 					column(2,
 						wellPanel(
