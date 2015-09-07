@@ -58,7 +58,6 @@ bootstrapPage(
                         ),
                       fluidRow(
 							tags$hr(),
-							tags$head(HTML("<script type='text/javascript' src='js/plot.js'></script>")),
 							dataTableOutput("table")	
                         ),
 						fluidRow(HTML('<div id="myModal" class="modal fade" role="dialog">
@@ -71,9 +70,22 @@ bootstrapPage(
 												<h4 class="modal-title">Modal Header</h4>
 											  </div>
 											  <div class="modal-body">'),
+								#uiOutput("geneId"),
+								textOutput("errtext"),							
+								textInput('SelectGeneId', "Current Gene ID", ""),
+								HTML("<hr />"),
+								uiOutput("cond1"),
+								uiOutput("cond2"),
+								uiOutput("cond3"),
+								uiOutput("cond4"),
+								shiny::actionButton("refreshPlot2",label="Generate Plot",class='btn btn-primary'),
+								
+								HTML("<hr />"),
+								HTML("<br />"),
 								plotOutput("boxplot"),
-								HTML('<p>some text</p>
-											  <p id="boxplot"></p>
+								HTML("<hr />"),
+								HTML('<p id="GeneId"></p>
+											  
 											  </div>
 											  <div class="modal-footer">
 												<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -81,8 +93,12 @@ bootstrapPage(
 											</div>
 										  </div>
 										</div>')
-							)
+							),
+					singleton(
+					#don't put in the head, must be after the Modal
+							tags$script(src = "plot.js"))
 					),
+
 					column(2,
 						wellPanel(
 							

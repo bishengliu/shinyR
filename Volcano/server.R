@@ -10,7 +10,7 @@ library("rCharts")
 # By default, the file size limit is 5MB. It can be changed by
 # setting this option. Here we'll raise limit to 36MB.
 options(shiny.maxRequestSize = 36*1024^2)
-
+#tags$head(HTML("<script type='text/javascript' src='js/plot.js'></script>"))
 server <- function(input, output, session)
 {
 
@@ -34,6 +34,10 @@ server <- function(input, output, session)
   
   #empty data frame for the input file 
   res <- c()
+  
+  #create empty vector
+  vectorGeneId <- c()
+
 
 getColnames <- reactive({
     infl <- input$infile      
@@ -164,13 +168,15 @@ getFV <- reactive({
 })
 
 #create the link for table
-createLink <- function(val) {
+createLink <- function(val1, val2) {
   #sprintf('<a href="https://www.google.com/#q=%s" target="_blank" class="btn btn-primary">Info</a>',val)
   #sprintf('<button onClick="showImg(%s)" class="btn btn-primary">Info</button>',val)
   #sprintf('<button onClick="showImg(%s)" type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal">Info</button>',val)
-  sprintf('<div class="row"><button type="button" id="%s" class="btn btn-default action-button btn btn-primary shiny-bound-input" data-toggle="modal" data-target="#myModal">Show Plot</button></row>',val)
-  #shiny::actionButton("refreshPlot",label="Refresh",class='btn btn-primary')
   
+  
+  sprintf('<div class="row"><button type="button" id="%s"  name="getGeneId" value="%s" class="btn btn-default action-button btn btn-primary shiny-bound-input openDialog" data-toggle="modal" data-target="#myModal">Generate Plot</button></row>',val1, val2)
+  #shiny::actionButton("refreshPlot",label="Refresh",class='btn btn-primary')
+  #shiny::actionButton(val1, val2)
 }
  
  ##uiOutPut
@@ -208,6 +214,69 @@ createLink <- function(val) {
   output$geneDesCol <- renderUI({
     selectInput("geneDesCol", label = "Select Gene Description Column", choices = getNewColnames())
   })
+  
+ ## for modal selection box
+  output$cond1 <- renderUI({
+    selectInput("cond1", label = "Select Condition", choices = getNewColnames())
+  })
+    output$cond2 <- renderUI({
+    selectInput("cond2", label = "Select Condition", choices = getNewColnames())
+  })
+    output$cond3 <- renderUI({
+    selectInput("cond3", label = "Select Condition", choices = getNewColnames())
+  })
+    output$cond4 <- renderUI({
+    selectInput("cond4", label = "Select Condition", choices = getNewColnames())
+  })
+  
+#geneID
+CurrentId <- reactive({
+	input$SelectGeneId
+	if(input$SelectGeneId !=""){
+	val <- input$SelectGeneId
+	return (val)
+	}else{
+	return(0)
+	}
+})
+  
+  #get cond1 
+Cond1 <- reactive({
+	input$cond1
+	if(input$cond1 !="Exclude from output"){
+	val <- isolate(input$cond1)
+	return (val)
+	}else{
+	return(0)
+	}
+})
+Cond2 <- reactive({
+	input$cond2
+	if(input$cond2 !="Exclude from output"){
+	val <- isolate(input$cond2)
+	return (val)
+	}else{
+	return(0)
+	}
+})
+Cond3 <- reactive({
+	input$cond3
+	if(input$cond3 !="Exclude from output"){
+	val <- isolate(input$cond3)
+	return (val)
+	}else{
+	return(0)
+	}
+})
+Cond4 <- reactive({
+	input$cond4
+	if(input$cond4 !="Exclude from output"){
+	val <- isolate(input$cond4)
+	return (val)
+	}else{
+	return(0)
+	}
+})
   
   
   observeEvent(input$refreshPlot, {
@@ -340,8 +409,15 @@ createLink <- function(val) {
 			}
 	  }
 	  
+	  #print(df[df$DoublePostitionCol=="TRUE", c(1)])
+	  #print(subsetdf)
+	  
+	  #get the geneID
+	  vectorGeneId <<- as.vector(df[df$DoublePostitionCol=="TRUE", c(1)])
+	  #print(vectorGeneId)
 	  # add link to the table
-	  df$Action <-  createLink(df$GeneId)
+	  df$Action <-  createLink(df$GeneId, df$GeneId)
+
       #df <- cbind(cbind(  data.frame(cbind(GeneId, LogFC,negLogPV, GeneName, GeneDes)), 
       #                    DoublePostitionCol
       #))
@@ -353,20 +429,54 @@ createLink <- function(val) {
   }, escape = FALSE)
   })
   
-   ###try to get boxplot in the table
 
-	output$boxplot <- renderPlot({
-		for (val in res[isolate(input$geneIdCol)]){
-		print(val)	
-				output$boxplot <- renderPlot({
-				hist(c(1,2,3))			
+	
+observeEvent(input$refreshPlot2,{
+		#get gene ID
+		currentGeneId <- CurrentId()
+		if(currentGeneId == 0){
+			output$errtext = renderText({ 
+			  "Current Gene ID is empty, please manually copy Gene ID!"
 			})
-		
 		}
-	})
-
-
+		print("currentID")
+		print(currentGeneId)
+		print("IDVector")
+		print(res[geneId()])
+		#put the gene id into a vector for indexing
+		idVector <- as.vector(res[geneId()])
+		#get index of gene id
+		geneIdIndex <- match(currentGeneId, idVector)
+		print("CurrentIndex")
+		print(geneIdIndex)
+		
+		if(Cond1() !=0){
+			cond1 <- as.vector(res[Cond1()])[geneIdIndex]}else{cond1 <- 0}
+		if(Cond2() !=0){
+			cond2 <- as.vector(res[Cond2()])[geneIdIndex]}else{cond2 <- 0}
+		if(Cond3() !=0){
+			cond3 <- as.vector(res[Cond3()])[geneIdIndex]}else{cond3 <- 0}
+		if(Cond4() !=0){
+			cond4 <- as.vector(res[Cond4()])[geneIdIndex]}else{cond4 <- 0}
+			
+			print("Conditions")
+			print(cond1)
+			print(cond2)
+			print(cond3)
+			print(cond4)
+		
+		output$boxplot <- renderPlot({
+		})
+  
+})
+	
+	
+	
+	
   }
 
+  
+
+	
 
   
