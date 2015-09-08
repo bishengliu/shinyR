@@ -232,11 +232,11 @@ createLink <- function(val1, val2) {
 #geneID
 CurrentId <- reactive({
 	input$SelectGeneId
-	if(input$SelectGeneId !=""){
-	val <- input$SelectGeneId
-	return (val)
-	}else{
+	if(isolate(length(input$SelectGeneId)) == 0){
 	return(0)
+	}else{
+	val <- isolate(input$SelectGeneId)
+	return (val)
 	}
 })
   
@@ -430,42 +430,40 @@ Cond4 <- reactive({
   })
   
 
-	
+
 observeEvent(input$refreshPlot2,{
-		#get gene ID
-		currentGeneId <- CurrentId()
-		if(currentGeneId == 0){
-			output$errtext = renderText({ 
-			  "Current Gene ID is empty, please manually copy Gene ID!"
-			})
-		}
-		print("currentID")
-		print(currentGeneId)
-		print("IDVector")
-		print(res[geneId()])
-		#put the gene id into a vector for indexing
-		idVector <- as.vector(res[geneId()])
+		# get all geneID
+		geneId <- res[geneId()]
 		#get index of gene id
-		geneIdIndex <- match(currentGeneId, idVector)
-		print("CurrentIndex")
-		print(geneIdIndex)
-		
+		CurrentId <- CurrentId()
+		geneIdIndex <- which(geneId == CurrentId)
+
 		if(Cond1() !=0){
-			cond1 <- as.vector(res[Cond1()])[geneIdIndex]}else{cond1 <- 0}
+			cond1 <- res[Cond1()][geneIdIndex,]}else{cond1 <- "EX"}
 		if(Cond2() !=0){
-			cond2 <- as.vector(res[Cond2()])[geneIdIndex]}else{cond2 <- 0}
+			cond2 <- res[Cond2()][geneIdIndex,]}else{cond2 <- "EX"}
 		if(Cond3() !=0){
-			cond3 <- as.vector(res[Cond3()])[geneIdIndex]}else{cond3 <- 0}
+			cond3 <- res[Cond3()][geneIdIndex,]}else{cond3 <- "EX"}
 		if(Cond4() !=0){
-			cond4 <- as.vector(res[Cond4()])[geneIdIndex]}else{cond4 <- 0}
-			
-			print("Conditions")
-			print(cond1)
-			print(cond2)
-			print(cond3)
-			print(cond4)
+			cond4 <- res[Cond4()][geneIdIndex,]}else{cond4 <- "EX"}
+		data <- c()
 		
+		if(cond1 != "EX"){
+		data[1] <- cond1
+		}
+		if(cond2 != "EX"){
+		data[2] <- cond2
+		}
+		if(cond3 != "EX"){
+		data[3] <- cond3
+		}
+		
+		if(cond4 != "EX"){
+		data[4] <- cond4
+		}
+		print(data)
 		output$boxplot <- renderPlot({
+			barplot(data)
 		})
   
 })
