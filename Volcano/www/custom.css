@@ -1,0 +1,26 @@
+.modal{
+    /*new custom width */
+    /*width: 960px;
+    /*must be half of the width, minus scrollbar on the left (30px)*/
+    /*margin-left: -100%;*/
+}
+
+.modal-body
+{
+	width: 1200px;
+	
+}
+.modal-content
+{
+	width: 1200px;
+	
+}
+.modal-dialog
+{
+	width: 1200px;
+	
+}
+
+.shiny-html-output{
+	width: 100%;
+}
